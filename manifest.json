@@ -2,7 +2,7 @@
   "name": "EduGen Panama PRO",
   "short_name": "EduGen PRO",
   "description": "Generador de planificaciones pedagógicas AOA - MEDUCA Panama",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0f172a",
