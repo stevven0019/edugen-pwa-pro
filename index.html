@@ -1,248 +1,152 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>EduGen Panama PRO - AOA Official</title>
-
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1d4ed8">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- Fonts & Styles -->
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
-
-    <style>
-        :root {
-            --blue-deep: #0f172a; --blue-primary: #1d4ed8; --blue-mid: #2563eb;
-            --slate-soft: #f1f5f9; --surface: #ffffff;
-        }
-        body { font-family: 'Syne', sans-serif; background: var(--slate-soft); min-height: 100vh; margin: 0; }
-        
-        #bootingLoader {
-            position: fixed; inset: 0; background: var(--blue-deep);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; transition: opacity 0.5s ease;
-        }
-        #bootingLoader.fade-out { opacity: 0; pointer-events: none; }
-        
-        .meduca-table-container table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        .meduca-table-container td, .meduca-table-container th { border: 1px dashed #000 !important; padding: 10px; font-family: serif; vertical-align: top; color: black; }
-        
-        .skill-btn { border: 1px solid #e2e8f0; padding: 8px; font-size: 10px; border-radius: 8px; font-weight: 800; background: white; transition: 0.2s; cursor: pointer; }
-        .skill-btn.active { background: var(--blue-primary); color: white; border-color: var(--blue-primary); }
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body>
-
-<div id="bootingLoader">
-    <i class="fas fa-graduation-cap text-white text-5xl mb-6 animate-bounce"></i>
-    <p class="text-white font-bold tracking-widest text-xs uppercase">Iniciando Sistema AOA PRO</p>
-</div>
-
-<div id="authContainer" class="hidden min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-black text-slate-800 italic">EDUGEN PRO</h2>
-            <p class="text-slate-400 text-[10px] font-bold uppercase">Acceso Docente Panama</p>
-        </div>
-        <input type="email" id="authEmail" placeholder="Correo" class="w-full mb-3 p-3 border rounded-xl outline-none focus:border-blue-500">
-        <input type="password" id="authPassword" placeholder="Contraseña" class="w-full mb-6 p-3 border rounded-xl outline-none focus:border-blue-500">
-        <button onclick="handleAuth()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ENTRAR</button>
-    </div>
-</div>
-
-<div id="appContainer" class="hidden p-4 md:p-8 max-w-6xl mx-auto">
-    <header class="flex justify-between items-center bg-white p-5 rounded-3xl mb-8 shadow-sm border border-white">
-        <div>
-            <h1 class="font-black text-xl italic text-blue-900">EDUGEN <span class="text-blue-500">PRO</span></h1>
-            <p id="userEmailDisplay" class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter"></p>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl text-xs font-black border border-blue-100">
-                TOKENS: <span id="creditCount">0</span>
-            </div>
-            <button onclick="logout()" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-power-off"></i></button>
-        </div>
-    </header>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <aside class="space-y-4">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-white">
-                <label class="text-[10px] font-black text-slate-400 uppercase mb-3 block">Habilidades AOA</label>
-                <div class="grid grid-cols-2 gap-2 mb-6" id="skillSelector">
-                    <button onclick="toggleSkill(this)" data-skill="Listening" class="skill-btn">LISTENING</button>
-                    <button onclick="toggleSkill(this)" data-skill="Reading" class="skill-btn">READING</button>
-                    <button onclick="toggleSkill(this)" data-skill="Speaking" class="skill-btn">SPEAKING</button>
-                    <button onclick="toggleSkill(this)" data-skill="Writing" class="skill-btn">WRITING</button>
-                </div>
-                <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Datos de la Clase</label>
-                <select id="grade" class="w-full p-3 border border-slate-100 rounded-xl mb-3 text-sm font-bold bg-slate-50">
-                    <option>7th Grade</option><option>8th Grade</option><option>9th Grade</option>
-                    <option>10th Grade</option><option>11th Grade</option><option>12th Grade</option>
-                </select>
-                <input type="text" id="theme" placeholder="Tema (ej. Food & Drinks)" class="w-full p-3 border border-slate-100 rounded-xl mb-3 text-sm">
-                <textarea id="objective" placeholder="Objetivo de aprendizaje..." class="w-full p-3 border border-slate-100 rounded-xl text-sm" rows="3"></textarea>
-            </div>
-            <button onclick="generatePlanner()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">
-                GENERAR PLANNER AOA
-            </button>
-        </aside>
-
-        <main class="lg:col-span-2">
-            <div id="resultContainer" class="bg-white rounded-3xl shadow-xl min-h-[500px] overflow-hidden hidden border border-white">
-                <div class="bg-slate-900 p-4 flex justify-between items-center">
-                    <span class="text-white text-[10px] font-bold tracking-widest uppercase">Documento Generado</span>
-                    <button onclick="downloadAsDoc()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Exportar .DOC</button>
-                </div>
-                <div id="loadingOverlay" class="hidden py-20 text-center">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-4"></div>
-                    <p class="text-blue-600 font-bold text-xs uppercase tracking-widest animate-pulse">Consultando Inteligencia AOA...</p>
-                </div>
-                <div id="resultContent" class="p-6 overflow-x-auto"></div>
-            </div>
-            <div id="emptyState" class="border-4 border-dashed border-slate-200 rounded-[40px] p-20 text-center flex flex-col items-center">
-                <i class="fas fa-layer-group text-slate-200 text-6xl mb-6"></i>
-                <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">Configure su planificación</p>
-            </div>
-        </main>
-    </div>
-</div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduGen PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
 <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- REEMPLAZA ESTOS DATOS CON LOS TUYOS ---
-    const firebaseConfig = {
-          apiKey: "AIzaSyBh_Loi-JCW-P1v7egfSsiP9tAaAv9s6eg",
-          authDomain: "edugen-pro-f310f.firebaseapp.com",
-          projectId: "edugen-pro-f310f",
-          storageBucket: "edugen-pro-f310f.firebasestorage.app",
-          messagingSenderId: "196040659450",
-          appId: "1:196040659450:web:6611bc874cbd8418ec5443",
-          measurementId: "G-3EFBCLEXSV"
-    };
-    const GEMINI_KEY = "TU_GEMINI_API_KEY";
-    // ------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyBh_Loi-JCW-P1v7egfSsiP9tAaAv9s6eg",
+  authDomain: "edugen-pro-f310f.firebaseapp.com",
+  projectId: "edugen-pro-f310f"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
 
-    let user = null;
-    let selectedSkills = [];
+let userData = null;
+let isAdmin = false;
 
-    // Manejo de Skills
-    window.toggleSkill = (btn) => {
-        const skill = btn.dataset.skill;
-        if (selectedSkills.includes(skill)) {
-            selectedSkills = selectedSkills.filter(s => s !== skill);
-            btn.classList.remove('active');
-        } else {
-            selectedSkills.push(skill);
-            btn.classList.add('active');
-        }
-    };
+// LOGIN
+window.login = async () => {
+  await signInWithEmailAndPassword(auth, email.value, pass.value);
+};
 
-    // Auth Observer
-    onAuthStateChanged(auth, async (u) => {
-        const loader = document.getElementById('bootingLoader');
-        if (u) {
-            user = u;
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('userEmailDisplay').innerText = u.email;
-            
-            const uRef = doc(db, "users", u.uid);
-            onSnapshot(uRef, (snap) => {
-                if (snap.exists()) {
-                    document.getElementById('creditCount').innerText = snap.data().tokens || 0;
-                } else {
-                    setDoc(uRef, { tokens: 10, email: u.email });
-                }
-            });
-        } else {
-            document.getElementById('authContainer').classList.remove('hidden');
-            document.getElementById('appContainer').classList.add('hidden');
-        }
-        setTimeout(() => loader.classList.add('fade-out'), 1000);
+// REGISTER + REFERRAL
+window.register = async () => {
+  const ref = new URLSearchParams(window.location.search).get("ref");
+  const userCred = await createUserWithEmailAndPassword(auth, email.value, pass.value);
+
+  await setDoc(doc(db, "users", userCred.user.uid), {
+    usos: 10,
+    referral: userCred.user.uid,
+    referredBy: ref || null
+  });
+
+  // Bonus referral
+  if (ref) {
+    await updateDoc(doc(db, "users", ref), {
+      usos: increment(5)
     });
+  }
+};
 
-    // Login
-    window.handleAuth = () => {
-        const e = document.getElementById('authEmail').value;
-        const p = document.getElementById('authPassword').value;
-        if (!e || !p) return alert("Completa los datos");
-        signInWithEmailAndPassword(auth, e, p).catch(err => alert("Error: " + err.message));
-    };
+window.logout = () => signOut(auth);
 
-    // Logout
-    window.logout = () => signOut(auth);
+// SESSION
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authDiv.classList.add("hidden");
+    appDiv.classList.remove("hidden");
 
-    // Generar IA
-    window.generatePlanner = async () => {
-        const theme = document.getElementById('theme').value;
-        const objective = document.getElementById('objective').value;
-        const grade = document.getElementById('grade').value;
+    const snap = await getDoc(doc(db, "users", user.uid));
+    userData = snap.data();
 
-        if (!theme || selectedSkills.length === 0) return alert("Define el tema y habilidades");
+    usos.innerText = userData.usos;
+    referralLink.innerText = location.origin + "?ref=" + user.uid;
 
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('resultContainer').classList.remove('hidden');
-        document.getElementById('loadingOverlay').classList.remove('hidden');
-        document.getElementById('resultContent').innerHTML = "";
-
-        const prompt = `Act as an expert MEDUCA Panama English Teacher. Create a Lesson Plan table for ${grade} following the AOA (Action Oriented Approach). 
-        Theme: ${theme}. 
-        Specific Objective: ${objective}. 
-        Focus Skills: ${selectedSkills.join(', ')}. 
-        Include: Warm-up, Presentation, Preparation, Performance, Assessment. 
-        Format: Professional HTML table with dashed borders. No markdown code blocks, just the table.`;
-
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await res.json();
-            const rawText = data.candidates[0].content.parts[0].text;
-            const cleanHtml = rawText.replace(/```html|```/g, '');
-            
-            document.getElementById('resultContent').innerHTML = `<div class="meduca-table-container">${cleanHtml}</div>`;
-            await updateDoc(doc(db, "users", user.uid), { tokens: increment(-1) });
-        } catch (e) {
-            console.error(e);
-            alert("Error al conectar con la IA.");
-        } finally {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-    };
-
-    window.downloadAsDoc = () => {
-        const content = document.getElementById('resultContent').innerHTML;
-        const blob = new Blob(['\ufeff', `<html><head><meta charset="utf-8"></head><body>${content}</body></html>`], { type: 'application/msword' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'Plan_AOA_EduGen.doc';
-        link.click();
-    };
-</script>
-
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error', err));
-        });
+    // ADMIN CHECK (pon tu email aquí)
+    if (user.email === "admin@email.com") {
+      isAdmin = true;
+      adminPanel.classList.remove("hidden");
+      loadStats();
     }
+  }
+});
+
+// GEMINI AI
+window.generate = async () => {
+  if (userData.usos <= 0) return alert("Sin créditos");
+
+  output.innerText = "Generando IA...";
+
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=TU_GEMINI_API", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: idea.value }] }] })
+  });
+
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error";
+
+  output.innerText = text;
+
+  userData.usos--;
+  await updateDoc(doc(db, "users", auth.currentUser.uid), { usos: userData.usos });
+  usos.innerText = userData.usos;
+};
+
+// ADMIN STATS
+async function loadStats() {
+  const snapshot = await getDocs(collection(db, "users"));
+  totalUsers.innerText = snapshot.size;
+}
+
 </script>
+
+<style>
+body { background:#020617; color:white; font-family:sans-serif; }
+.card { background:rgba(255,255,255,0.05); padding:20px; border-radius:20px; }
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="authDiv" class="flex items-center justify-center min-h-screen">
+<div class="card w-[90%] max-w-md">
+<h2>Login</h2>
+<input id="email" placeholder="Email" class="w-full p-2 mb-2 bg-black/40">
+<input id="pass" type="password" placeholder="Password" class="w-full p-2 mb-2 bg-black/40">
+<button onclick="login()" class="bg-blue-600 w-full p-2">Entrar</button>
+<button onclick="register()" class="bg-green-600 w-full p-2 mt-2">Crear cuenta</button>
+</div>
+</div>
+
+<!-- APP -->
+<div id="appDiv" class="hidden p-4">
+<div class="flex justify-between">
+<h1>EduGen PRO</h1>
+<button onclick="logout()">Salir</button>
+</div>
+
+<div class="card mt-4">
+<p>Créditos: <span id="usos"></span></p>
+<textarea id="idea" class="w-full p-2 bg-black/40"></textarea>
+<button onclick="generate()" class="bg-blue-600 mt-2 p-2">Generar IA</button>
+<div id="output" class="mt-3"></div>
+</div>
+
+<!-- REFERRAL -->
+<div class="card mt-4">
+<h3>Invita y gana créditos</h3>
+<p id="referralLink"></p>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPanel" class="hidden card mt-4">
+<h3>Admin Dashboard</h3>
+<p>Total usuarios: <span id="totalUsers"></span></p>
+</div>
+
+</div>
+
 </body>
 </html>
