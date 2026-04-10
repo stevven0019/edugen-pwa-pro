@@ -3,107 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduGen PRO</title>
+<title>EduGen Personal PRO</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// 🔥 SOLO LOGIN SIMPLE
 const firebaseConfig = {
-  apiKey: "AIzaSyBh_Loi-JCW-P1v7egfSsiP9tAaAv9s6eg",
-  authDomain: "edugen-pro-f310f.firebaseapp.com",
-  projectId: "edugen-pro-f310f"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getFirestore();
-
-let userData = null;
-let isAdmin = false;
 
 // LOGIN
 window.login = async () => {
   await signInWithEmailAndPassword(auth, email.value, pass.value);
 };
 
-// REGISTER + REFERRAL
-window.register = async () => {
-  const ref = new URLSearchParams(window.location.search).get("ref");
-  const userCred = await createUserWithEmailAndPassword(auth, email.value, pass.value);
-
-  await setDoc(doc(db, "users", userCred.user.uid), {
-    usos: 10,
-    referral: userCred.user.uid,
-    referredBy: ref || null
-  });
-
-  // Bonus referral
-  if (ref) {
-    await updateDoc(doc(db, "users", ref), {
-      usos: increment(5)
-    });
-  }
-};
-
 window.logout = () => signOut(auth);
 
 // SESSION
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
   if (user) {
     authDiv.classList.add("hidden");
     appDiv.classList.remove("hidden");
-
-    const snap = await getDoc(doc(db, "users", user.uid));
-    userData = snap.data();
-
-    usos.innerText = userData.usos;
-    referralLink.innerText = location.origin + "?ref=" + user.uid;
-
-    // ADMIN CHECK (pon tu email aquí)
-    if (user.email === "admin@email.com") {
-      isAdmin = true;
-      adminPanel.classList.remove("hidden");
-      loadStats();
-    }
   }
 });
 
-// GEMINI AI
-window.generate = async () => {
-  if (userData.usos <= 0) return alert("Sin créditos");
+// 🧠 PROMPT PRO LESSON PLANNER
+function buildPrompt(input){
+  return `Eres un experto en planificación educativa AOA (Approach Lesson Planner).
 
-  output.innerText = "Generando IA...";
+Crea una planificación completa basada en:
+
+${input}
+
+Debe incluir:
+- Specific objective
+- Learning Outcome
+- Desarrollo paso a paso de cada stage ( Warm-up / Pre-task (Engagement, Modeling and Clarification), Presentacion, preparacion, Performance, Assestment y Reflection)
+- Actividades dinámicas
+- Comments and Observations ( Homework, Formative Assessment of Learning y Teacher's Comments/Observations)
+- Recursos
+
+Formato profesional, claro y estructurado.`;
+}
+
+// 🤖 GEMINI
+window.generate = async () => {
+  output.innerText = "Generando planificación...";
 
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=TU_GEMINI_API", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents: [{ parts: [{ text: idea.value }] }] })
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: buildPrompt(idea.value) }] }]
+    })
   });
 
   const data = await res.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error";
 
   output.innerText = text;
-
-  userData.usos--;
-  await updateDoc(doc(db, "users", auth.currentUser.uid), { usos: userData.usos });
-  usos.innerText = userData.usos;
 };
-
-// ADMIN STATS
-async function loadStats() {
-  const snapshot = await getDocs(collection(db, "users"));
-  totalUsers.innerText = snapshot.size;
-}
 
 </script>
 
 <style>
-body { background:#020617; color:white; font-family:sans-serif; }
-.card { background:rgba(255,255,255,0.05); padding:20px; border-radius:20px; }
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#020617;
+  color:white;
+}
+
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background-image:
+    radial-gradient(80% 50% at 20% -20%, rgba(29,78,216,0.35), transparent 60%),
+    radial-gradient(60% 40% at 80% 120%, rgba(67,56,202,0.25), transparent 60%);
+}
+
+.card {
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  padding:20px;
+  border-radius:20px;
+}
 </style>
 </head>
 
@@ -111,40 +105,27 @@ body { background:#020617; color:white; font-family:sans-serif; }
 
 <!-- LOGIN -->
 <div id="authDiv" class="flex items-center justify-center min-h-screen">
-<div class="card w-[90%] max-w-md">
-<h2>Login</h2>
-<input id="email" placeholder="Email" class="w-full p-2 mb-2 bg-black/40">
-<input id="pass" type="password" placeholder="Password" class="w-full p-2 mb-2 bg-black/40">
-<button onclick="login()" class="bg-blue-600 w-full p-2">Entrar</button>
-<button onclick="register()" class="bg-green-600 w-full p-2 mt-2">Crear cuenta</button>
-</div>
+  <div class="card w-[90%] max-w-md">
+    <h2 class="text-xl mb-4">EduGen Login</h2>
+    <input id="email" placeholder="Email" class="w-full p-2 mb-2 bg-black/40">
+    <input id="pass" type="password" placeholder="Password" class="w-full p-2 mb-2 bg-black/40">
+    <button onclick="login()" class="bg-blue-600 w-full p-2">Entrar</button>
+  </div>
 </div>
 
 <!-- APP -->
-<div id="appDiv" class="hidden p-4">
-<div class="flex justify-between">
-<h1>EduGen PRO</h1>
-<button onclick="logout()">Salir</button>
-</div>
+<div id="appDiv" class="hidden p-6 max-w-3xl mx-auto">
 
-<div class="card mt-4">
-<p>Créditos: <span id="usos"></span></p>
-<textarea id="idea" class="w-full p-2 bg-black/40"></textarea>
-<button onclick="generate()" class="bg-blue-600 mt-2 p-2">Generar IA</button>
-<div id="output" class="mt-3"></div>
-</div>
+  <div class="flex justify-between mb-4">
+    <h1 class="text-2xl font-bold">EduGen Personal</h1>
+    <button onclick="logout()">Salir</button>
+  </div>
 
-<!-- REFERRAL -->
-<div class="card mt-4">
-<h3>Invita y gana créditos</h3>
-<p id="referralLink"></p>
-</div>
-
-<!-- ADMIN -->
-<div id="adminPanel" class="hidden card mt-4">
-<h3>Admin Dashboard</h3>
-<p>Total usuarios: <span id="totalUsers"></span></p>
-</div>
+  <div class="card">
+    <textarea id="idea" placeholder="Tema o clase..." class="w-full p-3 bg-black/40 rounded"></textarea>
+    <button onclick="generate()" class="bg-blue-600 mt-3 px-4 py-2 rounded w-full">Generar planificación</button>
+    <pre id="output" class="mt-4 whitespace-pre-wrap"></pre>
+  </div>
 
 </div>
 
